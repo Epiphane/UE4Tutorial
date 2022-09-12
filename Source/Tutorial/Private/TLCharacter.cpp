@@ -2,11 +2,13 @@
 
 
 #include "TLCharacter.h"
+#include "DrawDebugHelpers.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "TLInteractionComponent.h"
-#include "DrawDebugHelpers.h"
+#include "TLAttributesComponent.h"
 
 // Sets default values
 ATLCharacter::ATLCharacter()
@@ -22,6 +24,8 @@ ATLCharacter::ATLCharacter()
 	CameraComp->SetupAttachment(SpringArmComp);
 
 	InteractionComp = CreateDefaultSubobject<UTLInteractionComponent>("InteractionComp");
+
+    AttributesComp = CreateDefaultSubobject<UTLAttributesComponent>("AttributesComp");
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 
@@ -56,6 +60,7 @@ void ATLCharacter::MoveSideways(float value)
 void ATLCharacter::PrimaryAttack()
 {
 	PlayAnimMontage(AttackAnim);
+    UGameplayStatics::SpawnEmitterAttached(AttackingVFX, GetMesh(), "Muzzle_01");
 
 	GetWorldTimerManager().SetTimer(TimerHandle_Attack, this, &ATLCharacter::PrimaryAttack_TimeElapsed, 0.2f);
 }
@@ -63,6 +68,7 @@ void ATLCharacter::PrimaryAttack()
 void ATLCharacter::SecondaryAttack()
 {
     PlayAnimMontage(AttackAnim);
+    UGameplayStatics::SpawnEmitterAttached(AttackingVFX, GetMesh(), "Muzzle_01");
 
     GetWorldTimerManager().SetTimer(TimerHandle_Attack, this, &ATLCharacter::SecondaryAttack_TimeElapsed, 0.2f);
 }
@@ -70,6 +76,7 @@ void ATLCharacter::SecondaryAttack()
 void ATLCharacter::TernaryAttack()
 {
     PlayAnimMontage(AttackAnim);
+    UGameplayStatics::SpawnEmitterAttached(AttackingVFX, GetMesh(), "Muzzle_01");
 
     GetWorldTimerManager().SetTimer(TimerHandle_Attack, this, &ATLCharacter::TernaryAttack_TimeElapsed, 0.2f);
 }
@@ -122,12 +129,33 @@ void ATLCharacter::SpawnProjectile(TSubclassOf<AActor> ProjectileClass)
     }
 }
 
+void ATLCharacter::OnHealthChanged(AActor* InstigatorActor, UTLAttributesComponent* OwningComp, float NewHealth, float Delta)
+{
+    if (NewHealth <= 0.0f && Delta < 0.0f)
+    {
+        APlayerController* PC = Cast<APlayerController>(GetController());
+        DisableInput(PC);
+    }
+
+    if (Delta < 0)
+    {
+        GetMesh()->SetScalarParameterValueOnMaterials("TimeToHit", GetWorld()->TimeSeconds);
+    }
+}
+
 void ATLCharacter::PrimaryInteract()
 {
 	if (InteractionComp)
 	{
 		InteractionComp->PrimaryInteract();
 	}
+}
+
+void ATLCharacter::PostInitializeComponents()
+{
+    Super::PostInitializeComponents();
+
+    AttributesComp->OnHealthChanged.AddDynamic(this, &ATLCharacter::OnHealthChanged);
 }
 
 // Called every frame

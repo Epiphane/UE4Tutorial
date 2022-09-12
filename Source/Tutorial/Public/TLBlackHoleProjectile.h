@@ -31,4 +31,6 @@ protected:
 
 protected:
     void OnHit(UPrimitiveComponent* HitComponent, AActor* Other, UPrimitiveComponent* OtherComponent, FVector Normal, const FHitResult& Hit) override;
+
+    void CollideWith_Implementation(AActor* Other, UPrimitiveComponent* OtherComponent) override;
 };

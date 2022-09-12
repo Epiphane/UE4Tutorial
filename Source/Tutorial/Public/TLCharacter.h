@@ -6,10 +6,11 @@
 #include "GameFramework/Character.h"
 #include "TLCharacter.generated.h"
 
+class UAnimMontage;
 class UCameraComponent;
 class USpringArmComponent;
+class UTLAttributesComponent;
 class UTLInteractionComponent;
-class UAnimMontage;
 
 UCLASS()
 class TUTORIAL_API ATLCharacter : public ACharacter
@@ -30,6 +31,9 @@ protected:
     UPROPERTY(EditAnywhere, Category = "Attack")
     TSubclassOf<AActor> TeleportProjectileClass;
 
+    UPROPERTY(EditDefaultsOnly, Category = "Attack")
+    UParticleSystem* AttackingVFX;
+
 	FTimerHandle TimerHandle_Attack;
 
 public:
@@ -47,6 +51,9 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	UTLInteractionComponent* InteractionComp;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UTLAttributesComponent* AttributesComp;
+
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
@@ -63,7 +70,12 @@ protected:
 
 	void SpawnProjectile(TSubclassOf<AActor> ProjectileClass);
 
+    UFUNCTION()
+    void OnHealthChanged(AActor* InstigatorActor, UTLAttributesComponent* OwningComp, float NewHealth, float Delta);
+
 public:	
+	virtual void PostInitializeComponents() override;
+
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 

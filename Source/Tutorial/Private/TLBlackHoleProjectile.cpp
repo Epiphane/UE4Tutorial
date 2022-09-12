@@ -29,6 +29,14 @@ void ATLBlackHoleProjectile::BeginPlay()
     GetWorldTimerManager().SetTimer(TimerHandle_ParticleLifetime, this, &ATLBlackHoleProjectile::Explode, Lifetime);
 }
 
+void ATLBlackHoleProjectile::CollideWith_Implementation(AActor* Other, UPrimitiveComponent* OtherComponent)
+{
+    if (!Other->IsPendingKill() && OtherComponent->IsSimulatingPhysics())
+    {
+        Other->Destroy();
+    }
+}
+
 void ATLBlackHoleProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* Other, UPrimitiveComponent* OtherComponent, FVector Normal, const FHitResult& Hit)
 {
     if (!Other->IsPendingKill() && OtherComponent->IsSimulatingPhysics())

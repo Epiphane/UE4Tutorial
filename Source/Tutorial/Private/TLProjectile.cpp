@@ -12,7 +12,6 @@ ATLProjectile::ATLProjectile()
 {
     SphereComp = CreateDefaultSubobject<USphereComponent>("SphereComp");
     SphereComp->SetCollisionProfileName("Projectile");
-    SphereComp->OnComponentHit.AddDynamic(this, &ATLProjectile::OnHit);
     RootComponent = SphereComp;
 
     EffectComp = CreateDefaultSubobject<UParticleSystemComponent>("EffectComp");
@@ -29,7 +28,9 @@ ATLProjectile::ATLProjectile()
 void ATLProjectile::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+    SphereComp->OnComponentHit.AddDynamic(this, &ATLProjectile::OnHit);
+    SphereComp->OnComponentBeginOverlap.AddDynamic(this, &ATLProjectile::OnActorOverlap);
     SphereComp->IgnoreActorWhenMoving(GetInstigator(), true);
 }
 
@@ -39,7 +40,17 @@ void ATLProjectile::PostInitializeComponents()
 
 }
 
+void ATLProjectile::OnActorOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+    CollideWith(OtherActor, OtherComp);
+}
+
 void ATLProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* Other, UPrimitiveComponent* OtherComponent, FVector Normal, const FHitResult& Hit)
+{
+    Explode();
+}
+
+void ATLProjectile::CollideWith_Implementation(AActor* Other, UPrimitiveComponent* OtherComponent)
 {
     Explode();
 }
